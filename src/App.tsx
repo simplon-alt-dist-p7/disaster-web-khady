@@ -14,7 +14,25 @@ import {
   Cloud
 } from 'lucide-react'
 import * as THREE from 'three'
-import _ from 'lodash'
+
+function throttle<T extends (...args: unknown[]) => void>(fn: T, wait: number) {
+  let last = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  return (...args: Parameters<T>) => {
+    const now = Date.now()
+    const remaining = wait - (now - last)
+    if (remaining <= 0) {
+      last = now
+      fn(...args)
+    } else if (!timer) {
+      timer = setTimeout(() => {
+        last = Date.now()
+        timer = undefined
+        fn(...args)
+      }, remaining)
+    }
+  }
+}
 
 type Stat = {
   bundle: number
@@ -109,7 +127,7 @@ export default function App() {
       requestAnimationFrame(animate)
     }
     animate()
-    const onResize = _.throttle(() => {
+    const onResize = throttle(() => {
       camera.aspect = canvas.clientWidth / canvas.clientHeight
       camera.updateProjectionMatrix()
       renderer.setSize(canvas.clientWidth, canvas.clientHeight)
